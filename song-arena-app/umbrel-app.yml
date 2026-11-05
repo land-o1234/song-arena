@@ -4,7 +4,7 @@ name: Song Arena
 tagline: Rate songs and discover your favorites
 icon: https://raw.githubusercontent.com/land-o1234/song-arena/main/song-arena-app/icon.svg
 category: media
-version: "1.0.0"
+version: "1.0.1"
 port: 8080
 description: >-
   Song Arena is a self-hosted music rating app. Import a CSV of songs, compare
@@ -21,7 +21,9 @@ repo: https://github.com/land-o1234/song-arena
 support: https://github.com/land-o1234/song-arena/issues
 gallery: []
 releaseNotes: >-
-  Initial Umbrel community app release.
+  Improved CSV import compatibility with Spotify-style exports (Track name,
+  Artist name, Spotify - id). Song views now consistently show artwork, song
+  name, album, and artist details.
 dependencies: []
 path: ""
 defaultUsername: ""

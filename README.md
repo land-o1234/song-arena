@@ -8,7 +8,7 @@ A CSV-first, self-hosted web app for rating songs and discovering favorites thro
 docker compose up -d --build
 ```
 
-Open `http://localhost:8080`, then upload a CSV with `title` and `artist` columns. See [`REPORT.md`](REPORT.md) for the product plan, deployment notes, and security posture.
+Open `http://localhost:8080`, then upload a CSV with `Track name`/`title` and `Artist name`/`artist` columns. See [`REPORT.md`](REPORT.md) for the product plan, deployment notes, and security posture.
 
 ## Install on umbrelOS
 
