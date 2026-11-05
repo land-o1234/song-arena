@@ -4,6 +4,7 @@ import json
 import os
 import random
 import secrets
+from urllib.parse import urlparse
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request, send_from_directory
@@ -12,7 +13,8 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
 SONGS_PATH = DATA_DIR / "songs.json"
 RATINGS_PATH = DATA_DIR / "ratings.json"
-MAX_UPLOAD_BYTES = 2 * 1024 * 1024
+MAX_UPLOAD_MB = 10
+MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
@@ -59,29 +61,52 @@ def normalize_song(song):
 def parse_csv(file_storage):
     raw = file_storage.read(MAX_UPLOAD_BYTES + 1)
     if len(raw) > MAX_UPLOAD_BYTES:
-        raise ValueError("CSV is larger than 2 MB.")
+        raise ValueError(f"CSV is larger than {MAX_UPLOAD_MB} MB.")
     text = raw.decode("utf-8-sig")
-    reader = csv.DictReader(io.StringIO(text))
+    try:
+        dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;\t|")
+    except csv.Error:
+        dialect = csv.excel
+    reader = csv.DictReader(io.StringIO(text), dialect=dialect)
     if not reader.fieldnames:
         raise ValueError("CSV needs a header row.")
-    fields = {field.strip().lower(): field for field in reader.fieldnames if field}
-    title_key = fields.get("title") or fields.get("track") or fields.get("track name") or fields.get("name")
-    artist_key = fields.get("artist") or fields.get("artist name") or fields.get("album artist")
-    album_key = fields.get("album") or fields.get("album name")
-    image_key = (
-        fields.get("album image url")
-        or fields.get("album image")
-        or fields.get("image url")
-        or fields.get("artwork url")
-        or fields.get("cover url")
+    fields = {
+        "".join(character for character in field.strip().lower() if character.isalnum()): field
+        for field in reader.fieldnames
+        if field and field.strip()
+    }
+    title_key = (
+        fields.get("title")
+        or fields.get("track")
+        or fields.get("trackname")
+        or fields.get("song")
+        or fields.get("name")
     )
-    spotify_id_key = fields.get("spotify - id") or fields.get("spotify id")
+    artist_key = fields.get("artist") or fields.get("artistname") or fields.get("albumartist")
+    album_key = fields.get("album") or fields.get("albumname")
+    genre_key = fields.get("genre")
+    image_key = (
+        fields.get("albumimageurl")
+        or fields.get("albumimage")
+        or fields.get("imageurl")
+        or fields.get("artworkurl")
+        or fields.get("coverurl")
+        or fields.get("coverarturl")
+        or fields.get("image")
+        or fields.get("artwork")
+    )
+    spotify_id_key = fields.get("spotifyid") or fields.get("spotifytrackid") or fields.get("spotifyuri")
     if not title_key:
         raise ValueError("CSV needs a title, track, or name column.")
     result = []
     for row in reader:
         title = (row.get(title_key) or "").strip()
         artist = (row.get(artist_key) or "Unknown artist").strip() if artist_key else "Unknown artist"
+        spotify_id = (row.get(spotify_id_key) or "").strip() if spotify_id_key else ""
+        if spotify_id.startswith("spotify:track:"):
+            spotify_id = spotify_id.rsplit(":", 1)[-1]
+        elif spotify_id.startswith("https://open.spotify.com/track/"):
+            spotify_id = urlparse(spotify_id).path.rsplit("/", 1)[-1]
         if title:
             result.append(
                 normalize_song(
@@ -90,9 +115,9 @@ def parse_csv(file_storage):
                         "title": title[:200],
                         "artist": artist[:200] or "Unknown artist",
                         "album": (row.get(album_key) or "").strip()[:200] if album_key else "",
-                        "genre": (row.get(fields.get("genre", "")) or "").strip()[:100],
+                        "genre": (row.get(genre_key) or "").strip()[:100] if genre_key else "",
                         "image_url": (row.get(image_key) or "").strip() if image_key else "",
-                        "spotify_id": (row.get(spotify_id_key) or "").strip() if spotify_id_key else "",
+                        "spotify_id": spotify_id,
                     }
                 )
             )

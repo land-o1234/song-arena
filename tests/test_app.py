@@ -30,6 +30,19 @@ class ParseCsvTests(unittest.TestCase):
         self.assertEqual("B", song["album"])
         self.assertIn("image_url", song)
 
+    def test_supports_new_header_format_with_images_and_spotify_uri(self):
+        upload = InMemoryUpload(
+            "Title;Artist;Album;Album Image URL;Spotify URI\n"
+            "Song A;Artist A;Album A;https://i.scdn.co/image/abc123;spotify:track:xyz987\n"
+        )
+        songs = parse_csv(upload)
+        self.assertEqual(1, len(songs))
+        self.assertEqual("Song A", songs[0]["title"])
+        self.assertEqual("Artist A", songs[0]["artist"])
+        self.assertEqual("Album A", songs[0]["album"])
+        self.assertEqual("https://i.scdn.co/image/abc123", songs[0]["image_url"])
+        self.assertEqual("xyz987", songs[0]["spotify_id"])
+
 
 if __name__ == "__main__":
     unittest.main()
