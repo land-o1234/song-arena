@@ -1,0 +1,28 @@
+manifestVersion: 1
+id: song-arena-app
+name: Song Arena
+tagline: Rate songs and discover your favorites
+icon: https://raw.githubusercontent.com/land-o1234/song-arena/main/song-arena-app/icon.svg
+category: media
+version: "1.0.0"
+port: 8080
+description: >-
+  Song Arena is a self-hosted music rating app. Import a CSV of songs, compare
+  tracks head-to-head, and build a personal ranking of your favorites.
+
+
+  Your song library and ratings are stored in the app's persistent data
+  directory on umbrelOS.
+developer: land-o1234
+website: https://github.com/land-o1234/song-arena
+submitter: land-o1234
+submission: https://github.com/land-o1234/song-arena
+repo: https://github.com/land-o1234/song-arena
+support: https://github.com/land-o1234/song-arena/issues
+gallery: []
+releaseNotes: >-
+  Initial Umbrel community app release.
+dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
