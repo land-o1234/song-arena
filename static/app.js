@@ -1,5 +1,7 @@
 let state = {songs: [], ratings: {}};
 const $ = (selector) => document.querySelector(selector);
+const songImageCache = new Map();
+const fallbackCover = "https://placehold.co/96x96?text=%E2%99%AA";
 
 async function load() {
   const response = await fetch("/api/songs");
@@ -10,9 +12,32 @@ async function load() {
 }
 
 function card(song) {
-  return `<button class="song-card" data-id="${song.id}"><small>${song.genre || "Your library"}</small><h3>${escapeHtml(song.title)}</h3><p>${escapeHtml(song.artist)}${song.album ? ` · ${escapeHtml(song.album)}` : ""}</p></button>`;
+  queueSongImage(song);
+  return `<button class="song-card" data-id="${song.id}"><img class="song-cover" src="${escapeHtml(songImage(song))}" alt="${escapeHtml(song.title)} album art"><div><small>${song.genre || "Your library"}</small><h3>${escapeHtml(song.title)}</h3><p>${escapeHtml(song.artist)} · ${escapeHtml(song.album || "Unknown album")}</p></div></button>`;
 }
-function escapeHtml(value) { return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char])); }
+function songImage(song) { return songImageCache.get(song.id) || song.image_url || fallbackCover; }
+function queueSongImage(song) {
+  if (song.image_url || songImageCache.has(song.id)) return;
+  songImageCache.set(song.id, fallbackCover);
+  fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(`${song.title} ${song.artist}`)}&entity=song&limit=1`)
+    .then((response) => response.ok ? response.json() : null)
+    .then((data) => {
+      const image = data?.results?.[0]?.artworkUrl100;
+      if (image) {
+        songImageCache.set(song.id, image);
+        renderFavorites();
+        ["duel", "bracket", "question-duel"].forEach((target) => {
+          const panel = document.getElementById(target);
+          const cover = panel.querySelector(`[data-id="${song.id}"] .song-cover`);
+          if (cover) {
+            cover.src = image;
+          }
+        });
+      }
+    })
+    .catch(() => {});
+}
+function escapeHtml(value) { return String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char])); }
 async function nextDuel(target, question) {
   if (state.songs.length < 2) return;
   const response = await fetch("/api/sample");
@@ -28,7 +53,8 @@ async function nextDuel(target, question) {
 }
 function renderFavorites() {
   const rows = state.songs.map((song) => ({song, rating: state.ratings[song.id]})).filter((row) => row.rating).sort((a,b) => b.rating.score - a.rating.score || b.rating.votes - a.rating.votes);
-  $("#favorite-list").innerHTML = rows.length ? rows.map((row) => `<li><strong>${escapeHtml(row.song.title)}</strong><span>${escapeHtml(row.song.artist)} · ${row.rating.score}/5 signal · ${row.rating.votes} choice${row.rating.votes === 1 ? "" : "s"}</span></li>`).join("") : "<li>Make a few choices and your list will appear here.</li>";
+  rows.forEach((row) => queueSongImage(row.song));
+  $("#favorite-list").innerHTML = rows.length ? rows.map((row) => `<li><img class="song-cover" src="${escapeHtml(songImage(row.song))}" alt="${escapeHtml(row.song.title)} album art"><div><strong>${escapeHtml(row.song.title)}</strong><span>${escapeHtml(row.song.artist)} · ${escapeHtml(row.song.album || "Unknown album")} · ${row.rating.score}/5 signal · ${row.rating.votes} choice${row.rating.votes === 1 ? "" : "s"}</span></div></li>`).join("") : "<li>Make a few choices and your list will appear here.</li>";
 }
 document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => {
   document.querySelectorAll(".tab,.panel").forEach((item) => item.classList.remove("active"));
