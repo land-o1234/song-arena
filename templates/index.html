@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Song Arena</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">YOUR MUSIC, YOUR RULES</p>
+        <h1>Song <span>Arena</span></h1>
+        <p class="subtitle">Turn a pile of songs into a ranked favorite list through playful decisions.</p>
+      </div>
+      <div class="status" id="status">No library loaded</div>
+    </header>
+
+    <section class="import-card">
+      <div>
+        <h2>Bring your library</h2>
+        <p>Upload a CSV with <code>title</code> and <code>artist</code> columns. Album and genre are optional.</p>
+      </div>
+      <form id="import-form">
+        <input id="csv" type="file" accept=".csv,text/csv" required>
+        <button type="submit">Import CSV</button>
+      </form>
+      <p class="message" id="message" role="status"></p>
+    </section>
+
+    <nav class="tabs" aria-label="Game modes">
+      <button class="tab active" data-mode="arena">Head to head</button>
+      <button class="tab" data-mode="tournament">Tournament</button>
+      <button class="tab" data-mode="questions">Song questions</button>
+      <button class="tab" data-mode="favorites">Favorites</button>
+    </nav>
+
+    <section id="arena" class="panel active">
+      <div class="panel-heading"><div><p class="eyebrow">QUICK FIRE</p><h2>Which song wins?</h2></div><p>Choose the one you would keep.</p></div>
+      <div id="duel" class="duel empty"><p>Import songs to start making impossible choices.</p></div>
+    </section>
+    <section id="tournament" class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">BRACKET MODE</p><h2>Build your champion</h2></div><p>A focused knockout round.</p></div>
+      <div id="bracket" class="duel empty"><p>Import at least 2 songs to enter a tournament.</p></div>
+    </section>
+    <section id="questions" class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">VIBE CHECK</p><h2>What matters right now?</h2></div><p>Rate the feeling, not the facts.</p></div>
+      <div class="question-grid">
+        <button class="question" data-question="energy"><b>⚡</b><span>Which song gives you more energy?</span></button>
+        <button class="question" data-question="memory"><b>✦</b><span>Which song holds a better memory?</span></button>
+        <button class="question" data-question="repeat"><b>↻</b><span>Which would you play again right now?</span></button>
+      </div>
+      <div id="question-duel" class="duel empty"><p>Pick a question to begin.</p></div>
+    </section>
+    <section id="favorites" class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">YOUR SIGNAL</p><h2>Favorite songs</h2></div><p>Ranked from your choices.</p></div>
+      <ol id="favorite-list" class="favorite-list"><li>Make a few choices and your list will appear here.</li></ol>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

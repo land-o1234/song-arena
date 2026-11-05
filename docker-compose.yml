@@ -1,0 +1,23 @@
+services:
+  song-arena:
+    build: .
+    container_name: song-arena
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - song-arena-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - song-arena
+networks:
+  song-arena:
+    driver: bridge
+volumes:
+  song-arena-data:
